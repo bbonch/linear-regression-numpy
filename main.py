@@ -1,6 +1,28 @@
 from matplotlib import pyplot as plt
-from utils import *
+from utils import onehot_m, get_data
 from linear_regression import LinearRegression
+import numpy as np
+
+
+def print_pred(label_column, data, std, mean):
+    print(
+        f"Prediction: label={data[0][label_column] * std[label_column] + mean[label_column]} prediction={lr.predict(data[0:1,1:]) * std[label_column] + mean[label_column]}"
+    )
+
+
+def train_and_test(lc, d_norm, std, mean, ax, epochs, learning_rate, lr, ylabel=""):
+    print_pred(lc, d_norm, std, mean)
+    train_losses, test_losses = lr.train_test(
+        d_norm, epochs=epochs, learning_rate=learning_rate
+    )
+    print_pred(lc, d_norm, std, mean)
+    ax.plot(range(epochs), train_losses, label="Training loss")
+    ax.plot(range(epochs), test_losses, label="Testing loss")
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel(ylabel)
+    ax.set_title(rf"$\eta$ = {learning_rate}")
+    ax.legend()
+
 
 rng = np.random.default_rng()
 
@@ -14,26 +36,18 @@ d_norm = (d_oh - mean) / std
 lr = LinearRegression(d_norm.shape[1] - 1)
 
 label_column = 0
-print(
-    f"Before training: label={d_raw[0][label_column]} prediction={lr.predict(d_norm[0:1,1:]) * std[label_column] + mean[label_column]}"
-)
-
 epochs = 100
-learning_rate = 0.1
-train_losses, test_losses = lr.train_test(
-    d_norm, epochs=epochs, learning_rate=learning_rate
-)
+fig, axs = plt.subplots(1, 3, layout="constrained", figsize=(9, 3), sharey=True)
+fig.suptitle("MSE loss vs epoch")
 
-print(
-    f"After training: label={d_raw[0][label_column]} prediction={lr.predict(d_norm[0:1,1:]) * std[label_column] + mean[label_column]}"
-)
+train_and_test(label_column, d_norm, std, mean, axs[0], epochs, 0.1, lr, ylabel="MSE")
 
-plt.plot(range(epochs), train_losses, label="Training loss")
-plt.plot(range(epochs), test_losses, label="Testing loss")
-plt.xlabel("Epoch")
-plt.ylabel("MSE")
-plt.legend()
-plt.title("MSE loss vs epoch")
-plt.savefig("lr.png")
+lr.reset()
+train_and_test(label_column, d_norm, std, mean, axs[1], epochs, 0.05, lr)
+
+lr.reset()
+train_and_test(label_column, d_norm, std, mean, axs[2], epochs, 0.01, lr)
+
+fig.savefig("lr.png")
 
 print("Done")
