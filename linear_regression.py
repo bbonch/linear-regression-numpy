@@ -1,9 +1,20 @@
 import numpy as np
 
 
+def validate(f):
+    def wrapper(self, *args, **kwargs):
+        if not hasattr(self, "w") or not hasattr(self, "b"):
+            raise Exception("Model is not initialized")
+
+        return f(self, *args, **kwargs)
+
+    return wrapper
+
+
 class LinearRegression:
-    def __init__(self, m):
-        self.__reset(m)
+    def __init__(self, m=None):
+        if m:
+            self.__reset(m)
 
     def __loss_n(self, x, y):
         pred = np.matmul(x, self.w) + self.b
@@ -24,9 +35,11 @@ class LinearRegression:
         self.w = rng.random((m, 1))
         self.b = rng.random()
 
+    @validate
     def reset(self):
         self.__reset(self.w.shape[0])
 
+    @validate
     def train_test(self, data, epochs=100, learning_rate=0.01):
         if data.shape[1] - 1 != self.w.shape[0]:
             raise Exception(f"Invalid number of features {data.shape[1]}")
@@ -53,7 +66,20 @@ class LinearRegression:
 
         return (train_losses, test_losses)
 
+    @validate
     def predict(self, x):
         y = np.matmul(x, self.w) + self.b
 
         return y.item()
+
+    @validate
+    def save(self, file):
+        w = np.append(self.w.squeeze(), self.b)
+        with open(file, "wb") as f:
+            np.save(f, w)
+
+    def load(self, file):
+        with open(file, "rb") as f:
+            w = np.load(f)
+            self.w = w[:-1, np.newaxis]
+            self.b = w[-1]
