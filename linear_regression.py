@@ -40,14 +40,14 @@ class LinearRegression:
         self.__reset(self.w.shape[0])
 
     @validate
-    def train_test(self, data, epochs=100, learning_rate=0.01):
-        if data.shape[1] - 1 != self.w.shape[0]:
-            raise Exception(f"Invalid number of features {data.shape[1]}")
+    def train_test(
+        self, x_train, x_test, y_train, y_test, epochs=100, learning_rate=0.01
+    ):
+        if x_train.shape[1] != self.w.shape[0]:
+            raise Exception(f"Invalid number of features {x_train.shape[1]}")
 
         train_losses = []
         test_losses = []
-        x_train, x_test = data[100:, 1:], data[:100, 1:]
-        y_train, y_test = data[100:, 0:1], data[:100, 0:1]
 
         for epoch in range(epochs):
             loss_train_epoch = self.__loss_n(x_train, y_train)

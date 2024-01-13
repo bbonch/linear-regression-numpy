@@ -12,10 +12,15 @@ def print_pred(label_column, data, std, mean):
 
 def train_and_test(lc, d_norm, std, mean, ax, epochs, learning_rate, lr, ylabel=""):
     print_pred(lc, d_norm, std, mean)
+
+    x_train, x_test = d_norm[100:, 1:], d_norm[:100, 1:]
+    y_train, y_test = d_norm[100:, 0:1], d_norm[:100, 0:1]
     train_losses, test_losses = lr.train_test(
-        d_norm, epochs=epochs, learning_rate=learning_rate
+        x_train, x_test, y_train, y_test, epochs=epochs, learning_rate=learning_rate
     )
+
     print_pred(lc, d_norm, std, mean)
+
     ax.plot(range(epochs), train_losses, label="Training loss")
     ax.plot(range(epochs), test_losses, label="Testing loss")
     ax.set_xlabel("Epoch")
