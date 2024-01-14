@@ -29,7 +29,19 @@ def onehot_m(m, columns: list):
     return r
 
 
-def get_data():
+def sigmoid(x):
+    r = 1.0 / (1.0 + np.exp(-x))
+    r[r == 1.0] = 0.9999
+    r[r == 0.0] = 0.0001
+
+    return r
+
+
+def pred_to_class(pred, treshold=0.5):
+    return (pred > treshold).astype(int)
+
+
+def get_auto_mpg_data():
     url = "http://archive.ics.uci.edu/ml/machine-learning-databases/auto-mpg/auto-mpg.data"
     dataset = pd.read_csv(
         url, na_values="?", comment="\t", header=None, sep=" ", skipinitialspace=True
@@ -37,5 +49,15 @@ def get_data():
     dataset = dataset.dropna()
 
     dataset_np = dataset.to_numpy()
+
+    return dataset_np
+
+
+def get_wdbc_data():
+    url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data"
+    dataset = pd.read_csv(url)
+    dataset.iloc[:, 1] = dataset.iloc[:, 1].map({"B": 0, "M": 1})
+
+    dataset_np = dataset.to_numpy(dtype=np.float32)
 
     return dataset_np

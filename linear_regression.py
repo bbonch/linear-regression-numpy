@@ -1,4 +1,5 @@
 import numpy as np
+from utils import sigmoid
 
 
 def validate(f):
@@ -16,18 +17,11 @@ class LinearRegression:
         if m:
             self.__reset(m)
 
-    def __loss_n(self, x, y):
-        pred = np.matmul(x, self.w) + self.b
-        l = np.mean((pred - y) ** 2, axis=0)
+    def loss_n(self, x, y):
+        raise Exception("Not implemented")
 
-        return l.item()
-
-    def __dloss_n(self, x, y):
-        pred = np.matmul(x, self.w) + self.b
-        dl_w = np.mean(2 * (pred - y) * x, axis=0, keepdims=True)
-        dl_b = np.mean(2 * (pred - y), axis=0)
-
-        return (dl_w.T, dl_b.item())
+    def dloss_n(self, x, y):
+        raise Exception("Not implemented")
 
     def __reset(self, m):
         rng = np.random.default_rng()
@@ -50,14 +44,14 @@ class LinearRegression:
         test_losses = []
 
         for epoch in range(epochs):
-            loss_train_epoch = self.__loss_n(x_train, y_train)
+            loss_train_epoch = self.loss_n(x_train, y_train)
             train_losses.append(loss_train_epoch)
 
-            dl_w, dl_b = self.__dloss_n(x_train, y_train)
+            dl_w, dl_b = self.dloss_n(x_train, y_train)
             self.w = self.w - learning_rate * dl_w
             self.b = self.b - learning_rate * dl_b
 
-            loss_test_epoch = self.__loss_n(x_test, y_test)
+            loss_test_epoch = self.loss_n(x_test, y_test)
             test_losses.append(loss_test_epoch)
 
             print(
@@ -70,7 +64,7 @@ class LinearRegression:
     def predict(self, x):
         y = np.matmul(x, self.w) + self.b
 
-        return y.item()
+        return y
 
     @validate
     def save(self, file):
@@ -83,3 +77,40 @@ class LinearRegression:
             w = np.load(f)
             self.w = w[:-1, np.newaxis]
             self.b = w[-1]
+
+
+class Prediction(LinearRegression):
+    def loss_n(self, x, y):
+        pred = self.predict(x)
+        l_mean = np.mean((pred - y) ** 2, axis=0)
+
+        return l_mean.item()
+
+    def dloss_n(self, x, y):
+        pred = self.predict(x)
+        dl_w = np.mean(2 * (pred - y) * x, axis=0, keepdims=True)
+        dl_b = np.mean(2 * (pred - y), axis=0)
+
+        return (dl_w.T, dl_b.item())
+
+
+class Classification(LinearRegression):
+    def loss_n(self, x, y):
+        pred = self.predict(x)
+        l = y * np.log(pred) + (1 - y) * np.log(1 - pred)
+        l_mean = np.mean(l, axis=0)
+
+        return -l_mean.item()
+
+    def dloss_n(self, x, y):
+        pred = self.predict(x)
+        dl_w = np.mean((pred - y) * x, axis=0, keepdims=True)
+        dl_b = np.mean(pred - y, axis=0)
+
+        return (dl_w.T, dl_b.item())
+
+    def predict(self, x):
+        y = super().predict(x)
+        y = sigmoid(y)
+
+        return y
